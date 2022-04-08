@@ -2,17 +2,22 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
+const cors = require('cors');
 const { createUser, login } = require('./controllers/users');
 const routerUsers = require('./routes/users');
 const routerCards = require('./routes/cards');
 const { validateCreateUser, validateLogin } = require('./middlewares/validation');
 const errorHandler = require('./middlewares/handler');
 const auth = require('./middlewares/auth');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 const ErrorNotFound = require('./error/error-not-found');
 
 const { PORT = 3000 } = process.env;
 const app = express();
+
 app.use(bodyParser.json());
+app.use(cors());
+app.use(requestLogger);
 
 app.post('/signup', validateCreateUser, createUser);
 app.post('/signin', validateLogin, login);
@@ -24,6 +29,7 @@ app.use((req, res, next) => {
   next(new ErrorNotFound('Страница не найдена'));
 });
 
+app.use(errorLogger);
 app.use(errors());
 app.use(errorHandler);
 
