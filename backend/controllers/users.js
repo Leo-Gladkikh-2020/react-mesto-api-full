@@ -6,6 +6,8 @@ const ErrorUnauthorized = require('../error/error-unauthorized'); // 401
 const ErrorNotFound = require('../error/error-not-found'); // 404
 const ErrorConflictHttp = require('../error/error-conflict-http'); // 409
 
+const { NODE_ENV, JWT_SECRET } = process.env;
+
 module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
@@ -101,10 +103,10 @@ module.exports.login = (req, res, next) => {
     .then((user) => {
       const token = jwt.sign(
         { _id: user._id },
-        'some-secret-key',
+        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
         { expiresIn: '7d' },
       );
-      res.send({ token });
+      res.send({ token }).end();
     })
     .catch((err) => {
       throw new ErrorUnauthorized(err.message);

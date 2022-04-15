@@ -31,17 +31,19 @@ function App() {
     const [currentUser, setCurrentUser] = useState({});
     const [cards, setCards] = useState([]);
     const [userEmail, setUserEmail] = useState('');
-    const [loggedIn, setLoggedIn] = useState(localStorage.getItem('jwt') ? true : false);
+    const [loggedIn, setLoggedIn] = useState(localStorage.getItem('token') ? true : false);
     const history = useHistory();
 
     useEffect(() => {
-        Promise.all([api.getUserInfo(), api.getInitialCards()])
-            .then(([userData, cards]) => {
-                setCurrentUser(userData);
-                setCards(cards);
-            })
-            .catch(err => console.log(err))
-    }, []);
+        if (loggedIn) {
+            Promise.all([api.getUserInfo(), api.getInitialCards()])
+                .then(([userData, cards]) => {
+                    setCurrentUser(userData);
+                    setCards(cards);
+                })
+                .catch(err => console.log(err))
+        }
+    }, [loggedIn]);
 
     function handleEditProfileClick() {
         setIsEditProfilePopupOpen(true);
@@ -137,7 +139,7 @@ function App() {
             .then((data) => {
                 if (data.token) {
                     setLoggedIn(true);
-                    localStorage.setItem('jwt', data.token);
+                    localStorage.setItem('token', data.token);
                     setUserEmail(email);
                     history.push('/');
                 }
@@ -162,8 +164,8 @@ function App() {
     }
 
     function handleTokenCheck() {
-        if (localStorage.getItem('jwt')) {
-            const token = localStorage.getItem('jwt');
+        if (localStorage.getItem('token')) {
+            const token = localStorage.getItem('token');
             auth.checkToken(token)
                 .then(res => {
                     if (res) {
@@ -173,7 +175,7 @@ function App() {
                     }
                 })
                 .catch(err => {
-                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('token');
                     console.log(err);
                 })
         }
@@ -184,7 +186,7 @@ function App() {
     }, []);
 
     function signOut() {
-        localStorage.removeItem('jwt');
+        localStorage.removeItem('token');
         setLoggedIn(false);
         setUserEmail('');
         history.push('/signin');
